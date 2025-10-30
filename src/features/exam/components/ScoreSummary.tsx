@@ -1,53 +1,33 @@
-import type { Intento, Puntaje } from '../../../core/types';
-
 import React from 'react';
 
 type Props = {
-    score: Puntaje;
-    attempts: Intento[];
     total: number;
+    correct: number;
 };
 
-export default function ScoreSummary({ score, attempts, total }: Props) {
+export default function ScoreSummary({ total, correct }: Props) {
+    const incorrect = Math.max(0, total - correct);
+
     return (
-        <div className="card">
-            <div className="title">Resultado</div>
-            <div className="kv" style={{ marginTop: 8 }}>
-                <b>Total preguntas</b>
-                <div>{total}</div>
-                <b>Aciertos</b>
-                <div style={{ color: 'var(--ok)', fontWeight: 700 }}>
-                    {score.aciertos}
+        <div
+            style={{
+                border: '1px solid #d0d7de',
+                borderRadius: 10,
+                padding: '12px 14px',
+                background: '#fff',
+            }}
+        >
+            <div style={{ fontWeight: 600, marginBottom: 8 }}>Resultados</div>
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                <div>
+                    <strong>Correctas:</strong> {correct}
                 </div>
-                <b>Errores</b>
-                <div style={{ color: 'var(--bad)', fontWeight: 700 }}>
-                    {score.errores}
+                <div>
+                    <strong>Incorrectas:</strong> {incorrect}
                 </div>
-            </div>
-
-            <div className="hr"></div>
-
-            <div className="sub">Detalle</div>
-            <div style={{ display: 'grid', gap: 6 }}>
-                {attempts.map((a) => (
-                    <div
-                        key={a.qid}
-                        className="row"
-                        style={{ justifyContent: 'space-between' }}
-                    >
-                        <div>
-                            <b>{a.qid}</b> {a.timeout ? '(tiempo vencido)' : ''}
-                        </div>
-                        <div
-                            style={{
-                                color: a.correcta ? 'var(--ok)' : 'var(--bad)',
-                                fontWeight: 700,
-                            }}
-                        >
-                            {a.correcta ? 'Correcta' : 'Incorrecta'}
-                        </div>
-                    </div>
-                ))}
+                <div>
+                    <strong>Total:</strong> {total}
+                </div>
             </div>
         </div>
     );

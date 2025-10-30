@@ -1,113 +1,102 @@
-// src/features/exam/components/ExamShell.tsx
+import React, { useEffect, useMemo } from 'react';
 
-import { DURATION_MS, TITLE } from '../../../core/constants';
-import type { EnunciadoId, Pregunta } from '../../../core/types';
-import React, { useMemo, useState } from 'react';
-
-import ControlsBar from './ControlsBar';
-import { ENUNCIADOS } from '../../../data/enunciados';
-import EnunciadoModal from './EnunciadoModal';
-import ExplanationModal from './ExplanationModal';
-import ProgressDots from './ProgressDots';
+import GeneralEnunciadoOverlay from './GeneralEnunciadoOverlay';
+import GeneralEnunciadoOverlay_13_14 from './GeneralEnunciadoOverlay_13_14';
+import GeneralEnunciadoOverlay_4_7 from './GeneralEnunciadoOverlay_4_7';
+import GeneralEnunciadoOverlay_8_10 from './GeneralEnunciadoOverlay_8_10';
+import type { Pregunta } from '../../../core/types';
 import QuestionCard from './QuestionCard';
 import ScoreSummary from './ScoreSummary';
-import bankPart01 from '../../../data/questions/part-01';
+import { correctExplanations } from '../../../data/correct-explanations';
+import { mergeCorrectExplanations } from '../utils/mergeCorrectExplanations';
+import { prepareQuestions } from '../utils/prepareQuestions';
+import { questions } from '../../../data/questions';
 import { useExamEngine } from '../hooks/useExamEngine';
-import { useHiddenTimer } from '../hooks/useHiddenTimer';
+
+const PER_QUESTION_MS = 100_000; // 1 min 40 s
 
 export default function ExamShell() {
-    const bank: Pregunta[] = useMemo(() => bankPart01, []);
-    const engine = useExamEngine(bank);
+    const prepared: Pregunta[] = useMemo(
+        () => prepareQuestions(questions, { shuffle: false }),
+        []
+    );
+    const qs: Pregunta[] = useMemo(
+        () => mergeCorrectExplanations(prepared, correctExplanations),
+        [prepared]
+    );
 
-    // Timer oculto: si vence y no hay intento, se registra error y avanza
-    useHiddenTimer(DURATION_MS, String(engine.q.id), () => {
-        engine.commitTimeout();
-        engine.next();
-    });
+    const [state, act] = useExamEngine(qs);
 
-    const [explainOpen, setExplainOpen] = useState(false);
-    const [ctxOpen, setCtxOpen] = useState(false);
+    const currentAnswered = state.answered[state.current?.id];
+    const selectedId = currentAnswered?.selectedId ?? null;
 
-    const intentoActual =
-        engine.attempts.find((a) => a.qid === engine.q.id) || null;
-    const submitted = engine.submitted;
-    const canExplain = !!intentoActual;
+    const qid = state.current?.id;
+    const showOverlay_1_3 = qid === 'q1' || qid === 'q2' || qid === 'q3';
+    const showOverlay_4_7 =
+        qid === 'q4' || qid === 'q5' || qid === 'q6' || qid === 'q7';
+    const showOverlay_8_10 = qid === 'q8' || qid === 'q9' || qid === 'q10';
+    const showOverlay_13_14 = qid === 'q13' || qid === 'q14';
 
-    const group = engine.q.group as EnunciadoId;
-    const ctx = ENUNCIADOS[group] || { titulo: 'Enunciado', contenido: '—' };
-
-    function handleNext() {
-        if (!submitted) {
-            // Saltar sin comprobar => cuenta como omitida/incorrecta
-            engine.skip();
-        }
-        engine.next();
-    }
-
-    if (engine.finished) {
-        return (
-            <div className="card">
-                <div className="title">{TITLE}</div>
-                <div className="sub">Resumen del intento</div>
-                <ScoreSummary
-                    score={engine.score}
-                    attempts={engine.attempts}
-                    total={engine.total}
-                />
-            </div>
-        );
-    }
+    // Temporizador invisible por pregunta
+    useEffect(() => {
+        if (!qid || state.completed) return;
+        const t = setTimeout(() => {
+            if (state.index < state.questions.length - 1) {
+                act.next();
+            } else {
+                act.next();
+            }
+        }, PER_QUESTION_MS);
+        return () => clearTimeout(t);
+    }, [qid, state.completed, state.index, state.questions.length, act]);
 
     return (
-        <>
-            <div className="card">
-                <div className="spread">
-                    <div>
-                        <div className="h1">{TITLE}</div>
-                        <div className="sub">
-                            Pregunta {engine.index + 1} de {engine.total}
-                        </div>
-                    </div>
-                    <ProgressDots
-                        total={engine.total}
-                        index={engine.index}
-                        attempts={engine.attempts}
+        <div>
+            {showOverlay_1_3 && (
+                <GeneralEnunciadoOverlay
+                    isEnabled
+                    triggerLabel="Mostrar enunciado"
+                />
+            )}
+            {showOverlay_4_7 && (
+                <GeneralEnunciadoOverlay_4_7
+                    isEnabled
+                    triggerLabel="Mostrar enunciado"
+                />
+            )}
+            {showOverlay_8_10 && (
+                <GeneralEnunciadoOverlay_8_10
+                    isEnabled
+                    triggerLabel="Mostrar enunciado"
+                />
+            )}
+            {showOverlay_13_14 && (
+                <GeneralEnunciadoOverlay_13_14
+                    isEnabled
+                    triggerLabel="Mostrar enunciado"
+                />
+            )}
+
+            {state.current && (
+                <QuestionCard
+                    q={state.current}
+                    selectedId={selectedId}
+                    onSelect={act.select}
+                    onPrev={act.prev}
+                    onNext={act.next}
+                    prevDisabled={state.index === 0}
+                    nextDisabled={state.index === state.questions.length - 1}
+                />
+            )}
+
+            {state.completed && (
+                <div style={{ marginTop: 16 }}>
+                    <ScoreSummary
+                        total={state.questions.length}
+                        correct={state.totalCorrect}
                     />
                 </div>
-
-                <div className="hr"></div>
-
-                <QuestionCard
-                    q={engine.q}
-                    seleccion={engine.seleccion}
-                    submitted={submitted}
-                    onSelect={engine.selectOption}
-                />
-
-                <ControlsBar
-                    submitted={submitted}
-                    onShowEnunciado={() => setCtxOpen(true)}
-                    onShowFundamentos={() => setExplainOpen(true)}
-                    canExplain={canExplain}
-                    onSubmit={engine.submit}
-                    canSubmit={engine.seleccion !== null}
-                    onNext={handleNext}
-                />
-            </div>
-
-            <ExplanationModal
-                open={explainOpen}
-                onClose={() => setExplainOpen(false)}
-                q={engine.q}
-                seleccion={engine.seleccion}
-            />
-
-            <EnunciadoModal
-                open={ctxOpen}
-                titulo={ctx.titulo}
-                contenido={ctx.contenido}
-                onClose={() => setCtxOpen(false)}
-            />
-        </>
+            )}
+        </div>
     );
 }

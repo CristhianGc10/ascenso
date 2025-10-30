@@ -1,52 +1,29 @@
-// src/core/types.ts
+// Tipos centrales
 
-/** Id que asocia la pregunta a un enunciado/situación (p. ej., "1-3"). */
-export type EnunciadoId = string;
-
-export type Enunciado = {
-    titulo: string;
-    contenido: string;
+export type Opcion = {
+    id: string;
+    label: string; // 'A' | 'B' | 'C' | ...
+    texto: string;
+    explicacion?: string; // feedback por alternativa
+    capacidad?: number; // 1 | 2 | 3 ...
 };
 
-export type EnunciadosMap = Record<EnunciadoId, Enunciado>;
-
-/** Una opción puede ser un string simple o un objeto con texto y una clave opcional para la “badge”. */
-export type Opcion = string | { key?: string; label?: string; text: string };
-
-/** Estructura de cada pregunta que esperan los componentes (QuestionCard, ExamShell, etc.). */
 export type Pregunta = {
-    id: string; // único
-    group: EnunciadoId; // para abrir el EnunciadoModal
-    prompt: string; // texto de la pregunta
-    options: Opcion[]; // alternativas
-    answer: number; // índice correcto (0..n-1)
-    explanation?: string; // fundamento opcional
+    id: string;
+    // Texto principal de la pregunta (se renderiza justificado y con posibles resaltados)
+    enunciado: string;
+    // Contenido opcional que aparece ANTES del enunciado:
+    preface?: string; // pequeño párrafo previo, justificado
+    quote?: string; // bloque tipo “card” (por ejemplo, texto entre comillas)
+    options: Opcion[];
+    correctLabel?: string; // letra oficial
+    answerId?: string; // se deriva de correctLabel al preparar
+    imagenUrl?: string;
+    etiqueta?: string;
 };
 
-/** Intentos registrados durante el examen. */
-export type AttemptStatus = 'correct' | 'wrong' | 'skipped' | 'timeout';
-
-export type Attempt = {
-    qid: string;
-    selected: number | null;
-    correctIndex: number | null;
-    status: AttemptStatus;
-};
-
-/** API mínima del motor de examen (lo que retorna useExamEngine). */
-export type ExamEngine = {
-    q: Pregunta;
-    index: number;
-    total: number;
-    seleccion: number | null;
-    submitted: boolean;
-    attempts: Attempt[];
-    finished: boolean;
-    score: number;
-
-    selectOption: (idx: number) => void;
-    submit: () => void;
-    skip: () => void;
-    commitTimeout: () => void;
-    next: () => void;
+export type RespuestaMarcada = {
+    questionId: string;
+    selectedId: string | null;
+    isCorrect: boolean | null;
 };

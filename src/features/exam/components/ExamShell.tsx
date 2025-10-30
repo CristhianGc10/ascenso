@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 
 import GeneralEnunciadoOverlay from './GeneralEnunciadoOverlay';
 import GeneralEnunciadoOverlay_13_14 from './GeneralEnunciadoOverlay_13_14';
+import GeneralEnunciadoOverlay_17_19 from './GeneralEnunciadoOverlay_17_19';
 import GeneralEnunciadoOverlay_4_7 from './GeneralEnunciadoOverlay_4_7';
 import GeneralEnunciadoOverlay_8_10 from './GeneralEnunciadoOverlay_8_10';
 import type { Pregunta } from '../../../core/types';
@@ -36,8 +37,8 @@ export default function ExamShell() {
         qid === 'q4' || qid === 'q5' || qid === 'q6' || qid === 'q7';
     const showOverlay_8_10 = qid === 'q8' || qid === 'q9' || qid === 'q10';
     const showOverlay_13_14 = qid === 'q13' || qid === 'q14';
+    const showOverlay_17_19 = qid === 'q17' || qid === 'q18' || qid === 'q19';
 
-    // Temporizador invisible por pregunta
     useEffect(() => {
         if (!qid || state.completed) return;
         const t = setTimeout(() => {
@@ -72,6 +73,12 @@ export default function ExamShell() {
             )}
             {showOverlay_13_14 && (
                 <GeneralEnunciadoOverlay_13_14
+                    isEnabled
+                    triggerLabel="Mostrar enunciado"
+                />
+            )}
+            {showOverlay_17_19 && (
+                <GeneralEnunciadoOverlay_17_19
                     isEnabled
                     triggerLabel="Mostrar enunciado"
                 />
